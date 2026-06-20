@@ -1,0 +1,19 @@
+services:
+  app:
+    image: node:22
+    ports:
+      - 4321:4321
+    working_dir: /app
+    command: >
+      bash -c "
+      npm ci
+      && npm run dev -- --host 0.0.0.0"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4321"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    volumes:
+      - ./:/app
+      - /app/node_modules
