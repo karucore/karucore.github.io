@@ -1,6 +1,6 @@
 ---
 author: Markku-Juhani O. Saarinen
-pubDatetime: 2026-06-20T12:00:00.000Z
+pubDatetime: 2026-06-21T09:00:00.000Z
 title: Announcing karu64 and karudeb
 featured: true
 draft: false
@@ -19,7 +19,6 @@ These two repos allow you to boot and SSH into the RISC-V system running on the 
 * [**karu64**](https://github.com/karucore/karu64) is a RVA23U64 - compliant RISC-V Vector core and FPGA bring-up tree — a single-issue, in-order RV64IMAFDC design with M/S/U privilege, Sv39 translation, IEEE 754 single- and double-precision floating point, and vector plus vector-crypto (Zvk) execution, targeting a VCU118 DDR4 SoC and passing all 110 scalar `riscv-tests`.
 * [**karudeb**](https://github.com/karucore/karudeb) is the Debian `riscv64` NFS-root distribution scaffolding that builds the kernels, device trees, and root filesystems which boot Linux on that core, on real VCU118 hardware and under QEMU.
 
-Here's me logging into the board from host:
 <figure>
   <img
     src="/ssh-login.png"
@@ -30,5 +29,15 @@ Here's me logging into the board from host:
     board.
   </figcaption>
 </figure>
+
+From the README:
+
+**`karu64`** is an RV64 core (and FPGA bring-up tree). The Linux baseline is RV64GCV (RV64IMAFDCV + Zicsr + Zifencei, RVV 1.0 with Zvl256b), with M/S/U privilege, Sv39 translation, generic CLINT/PLIC/NS16550 platform services (interrupts and serial console). We also have full Zvkt (vector cryptography) extensions and Keccak available. We implemented Karu CPU in portable Verilog, and it is released under a permissive (BSD 3-Clause) license.
+
+For testing on the [VCU118](https://www.amd.com/en/products/adaptive-socs-and-fpgas/evaluation-boards/vcu118.html) (Xilinx UltraScale+ FPGA) target, we instantiate a SoC with Xilinx DDR4 IP components for 2 GB of memory and [LiteEth/LiteX](https://github.com/enjoy-digital/liteeth) for a basic Gbit Ethernet that supports network boot and a filesystem.
+
+The Linux/rootfs images, DTBs, kernel builds, and deployment artifacts are produced by the companion `karudeb` repository. The core, its flows, and the FPGA SoC are documented under [doc/](doc/) — see the Documentation section below.
+
+The core is split into IFU, decoder, ALU, M (multiply/divide), FPU (single- and double-precision IEEE 754), LSU, CSR/privilege/MMU, register files, and vector execute blocks, all behind AXI4 instruction/data memory ports. The repository also carries freestanding firmware, Verilator and Icarus testbenches, VCU118 FPGA flows, Yosys/OpenSTA NanGate45 flows, and runners for riscv-tests, TestFloat, vector/crypto tests, and OpenSBI/Linux simulation.
 
 <!-- More to come — write the rest here. -->
