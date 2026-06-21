@@ -7,7 +7,7 @@ export default defineAstroPaperConfig({
     description: "RISC-V from Manse Processors.",
     author: "Markkku-Juhani O. Saarinen",
     profile: "https://mjos.fi",
-    ogImage: "default-og.jpg",
+    ogImage: "karu64.png",
     lang: "en",
     timezone: "Europe/Helsinki",
     dir: "ltr",
