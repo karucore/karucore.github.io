@@ -18,14 +18,14 @@ I was very happy to notice that the stock OpenSSL 3.5.6 shipped with RISC-V Debi
 
 ##	OpenSSL ``Processor Capabilities Vector''
 
-OpenSSL supports a thing called the [RISC-V processor capabilities vector](https://docs.openssl.org/3.6/man3/OPENSSL_riscvcap/), which specifies the processor capabilities available on a system. The library can **dynamically** load implementations optimized for your specific processor (ARM, Intel, PowerPC, ... CPUs have similar capability vectors.)
+OpenSSL supports a thing called the [RISC-V processor capabilities vector](https://docs.openssl.org/3.6/man3/OPENSSL_riscvcap/), which specifies the processor capabilities available on a system. The library can **dynamically** load implementations optimized for your specific processor variant. Not just RISC-V processors but also ARM, Intel, PowerPC, ... CPUs have similar capability vectors.
 
-On any given machine, you can dump the string from the command line. With the current Karu64, you get:
+On any given machine, you can dump the string from the command line with `openssl info -cpusettings`. With the current Karu64, you get:
 ```
 karu@karudeb:~$ openssl info -cpusettings
 OPENSSL_riscvcap=RV64GC_ZBA_ZBB_ZBS_ZKT_V_ZVKB_ZVKG_ZVKNED_ZVKNHA_ZVKNHB_ZVKSED_ZVKSH vlen:256
 ```
-The capabilities of Karu (at the time of writing) decipher as:
+The capabilities OpenSSL reports for Karu (at the time of writing) are:
 
 |**String**| **Description**                               |
 |----------|-----------------------------------------------|
@@ -44,18 +44,18 @@ The capabilities of Karu (at the time of writing) decipher as:
 | Zvksh    | Vector SM3 Secure Hash.                       |
 | VLEN     | Physical vector register size.                |
 
-Linux does know about `Zvkt` (Vector DIEL) -- as can be seen from `/proc/cpuinfo` -- but OpenSSL doesn't have that separately. Anyway, Karu implements and asserts both "constant-time" extensions.
+Linux does know about `Zvkt` (Vector DIEL) -- as can be seen from `/proc/cpuinfo` -- but OpenSSL doesn't have that separately. Anyway, Karu implements and asserts both *"constant-time"* extensions.
 
-However, Karu doesn't support many *Scalar Cryptography* extensions (`Zk..` rather than `Zvk..`) as these were superseded by the vector equivalents in [RVA23U64](https://docs.riscv.org/reference/rva23/v1.0/rva23-profiles.html).
 
 > [!note]
-> We published a [paper](https://doi.org/10.46586/tches.v2021.i1.109-136) on the design of scalar cryptography extensions back in 2020; the vector extensions were largely a continuation of that work in the RISC-V Crypto TG, with stronger involvement from Ken Dockser and a few additional folks. However, I don't think anyone has written a paper specifically on that design process.
+> Karu doesn't support many *Scalar Cryptography* extensions (`Zk..` rather than `Zvk..`) as these were mostly superseded by the vector equivalents in [RVA23U64](https://docs.riscv.org/reference/rva23/v1.0/rva23-profiles.html).
+> We published a [paper](https://doi.org/10.46586/tches.v2021.i1.109-136) on the design process of the official non-vector cryptography extensions back in 2020; the vector extensions were largely a continuation of that work in the RISC-V Crypto TG, with stronger involvement from Ken Dockser and a few additional folks.
 
 ##	You can set it dynamically -- on command line!
 
-The OpenSSL command-line utility (of the same name) actually picks up the capability string from the environment, so we can pass it on the command line and study the effect of various extensions on performance.
+The OpenSSL command-line utility (of the same name) can pick up the capability string from an environment variable, so we can pass it on the command line and study the effect of various extensions on performance.
 
-Let's pass simply the base `rv64gc` ISA string to get the
+Let's pass simply the base `rv64gc` (base) ISA string to the built-in benchmark function for AES-128:
 ```
 karu@karudeb:~$ OPENSSL_riscvcap=rv64gc openssl speed -bytes 16384 -evp aes-128-ecb
 ```
@@ -86,7 +86,7 @@ So, plain AES operations are 6564.63 / 199.26 = 33 times faster with the extensi
 
 ##	Initial OpenSSL Benchmarks
 
-The KaruDeb repo includes an automated script `openssl_zvk_bench` that runs this test on relevant ciphers. We also use the command-line utility for additional end-to-end known-answer tests (KATs); this script is `openssl_zvk_kat`.
+The KaruDeb repo includes an automated script `openssl_zvk_bench` that runs this test on relevant ciphers. 
 
 | Case | Algorithm | scalar kB/s | Best cap set | Best kB/s | Best speedup |
 |---|---|---:|---|---:|---:|
@@ -103,3 +103,5 @@ The KaruDeb repo includes an automated script `openssl_zvk_bench` that runs this
 
 Even though we write "Best cap set", there is no harm in having all of the capabilities enabled simultaneously.
 
+>[!tip]
+> We also use the `openssl` command-line utility for additional end-to-end known-answer tests (KATs); this script is `openssl_zvk_kat`.
