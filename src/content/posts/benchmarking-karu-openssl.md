@@ -14,7 +14,7 @@ description: Benchmarking stock OpenSSL on Karu with its Zvk cryptography extens
 
 [OpenSSL](https://openssl.org/) is the de facto standard cryptographic library for Linux systems. Hence, it is natural to use it for benchmarking the impact of our basic cryptographic features.
 
-I was very happy to notice that the stock OpenSSL 3.5.6 shipped with RISC-V Debian (trixie) already has comprehensive support for the Zvk vector crypto extensions. Well, this shouldn't be so surprising -- they were ratified in 2023, and are now fully supported in both GCC and LLVM toolchains. For more information about these extensions, see  [Chapter 33 of the Unprivileged ISA spec](https://docs.riscv.org/reference/isa/v20260120/unpriv/vector-crypto.html).
+I was very happy to discover that the stock OpenSSL 3.5.6 shipped with RISC-V Debian (trixie) already has comprehensive support for the Zvk vector crypto extensions. Well, this shouldn't be so surprising -- they were ratified in 2023, and are now fully supported in both GCC and LLVM toolchains. For more information about these extensions, see  [Chapter 33 of the Unprivileged ISA spec](https://docs.riscv.org/reference/isa/v20260120/unpriv/vector-crypto.html).
 
 ##	OpenSSL ``Processor Capabilities Vector''
 
@@ -101,7 +101,7 @@ The KaruDeb repo includes an automated script `openssl_zvk_bench` that runs this
 | sm4-ecb | SM4-ECB | 222.6 | `zvkb_zvksed` | 1784.8 | 8.02x |
 | chacha20 | ChaCha20 | 403.4 | `v_zbb_zvkb` | 1363.7 | 3.38x |
 
-Even though we write "Best cap set", there is no harm in having all of the capabilities enabled simultaneously.
+Even though we write "Best cap set", there is no harm in having all of the capabilities enabled.
 
 >[!tip]
 > We also use the `openssl` command-line utility for additional end-to-end known-answer tests (KATs); this script is `openssl_zvk_kat`.
