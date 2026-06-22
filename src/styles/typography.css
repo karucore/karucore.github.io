@@ -47,6 +47,10 @@
       @apply border-border mx-auto border;
     }
 
+    img.no-frame {
+      @apply border-0;
+    }
+
     img[role="button"] {
       @apply cursor-zoom-in;
 
@@ -93,6 +97,7 @@
     pre {
       @apply focus-visible:outline-accent focus-visible:border-transparent focus-visible:outline-2 focus-visible:outline-dashed;
     }
+
   }
 
   /* ===== Code Blocks & Syntax Highlighting ===== */
