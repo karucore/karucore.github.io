@@ -14,11 +14,11 @@ description: Benchmarking stock OpenSSL on Karu with its Zvk cryptography extens
 
 [OpenSSL](https://openssl.org/) is the de facto standard cryptographic library for Linux systems. Hence, it is natural to use it for benchmarking the impact of our basic cryptographic features.
 
-I was very happy to discover that the stock OpenSSL 3.5.6 shipped with RISC-V Debian (trixie) already has comprehensive support for the Zvk vector crypto extensions. Well, this shouldn't be so surprising -- they were ratified in 2023, and are now fully supported in both GCC and LLVM toolchains. For more information about these extensions, see  [Chapter 33 of the Unprivileged ISA spec](https://docs.riscv.org/reference/isa/v20260120/unpriv/vector-crypto.html).
+I was happy to notice that the stock OpenSSL 3.5.6 currently shipped with RISC-V Debian (trixie) already has comprehensive support for the Zvk vector crypto extensions. Well, this shouldn't be so surprising -- they were already ratified already in 2023. For more information about these extensions, see  [Chapter 33 of the Unprivileged ISA spec](https://docs.riscv.org/reference/isa/v20260120/unpriv/vector-crypto.html).
 
-##	OpenSSL ``Processor Capabilities Vector''
+##	The OpenSSL ``Processor Capabilities Vector''
 
-OpenSSL supports a thing called the [RISC-V processor capabilities vector](https://docs.openssl.org/3.6/man3/OPENSSL_riscvcap/), which specifies the processor capabilities available on a system. The library can **dynamically** load implementations optimized for your specific processor variant. Not just RISC-V processors but also ARM, Intel, PowerPC, ... CPUs have similar capability vectors.
+OpenSSL uses the [RISC-V processor capabilities vector](https://docs.openssl.org/3.6/man3/OPENSSL_riscvcap/) to specify processor capabilities available on a given system. The library can **dynamically** load implementations optimized for your specific processor variant. Not just RISC-V processors but also ARM, Intel, PowerPC, ... CPUs have similar capability vectors, as additional cryptographic capabilities have been added to those ISAs over time.
 
 On any given machine, you can dump the string from the command line with `openssl info -cpusettings`. With the current Karu64, you get:
 ```
@@ -44,14 +44,14 @@ The capabilities OpenSSL reports for Karu (at the time of writing) are:
 | Zvksh    | Vector SM3 Secure Hash.                       |
 | VLEN     | Physical vector register size.                |
 
-Linux does know about `Zvkt` (Vector DIEL) -- as can be seen from `/proc/cpuinfo` -- but OpenSSL doesn't have that separately. Anyway, Karu implements and asserts both *"constant-time"* extensions.
+Linux *does* also know about `Zvkt` (Vector DIEL) -- as can be seen from `/proc/cpuinfo` -- but OpenSSL doesn't seem to have that separately. In any case, Karu itself implements both *"constant-time"* extensions, which means that a specific subset of cryptography and non-cryptography instructions always has data-independent execution latency.
 
 
 > [!note]
-> Karu doesn't support many *Scalar Cryptography* extensions (`Zk..` rather than `Zvk..`) as these were mostly superseded by the vector equivalents in [RVA23U64](https://docs.riscv.org/reference/rva23/v1.0/rva23-profiles.html).
-> We published a [paper](https://doi.org/10.46586/tches.v2021.i1.109-136) on the design process of the official non-vector cryptography extensions back in 2020; the vector extensions were largely a continuation of that work in the RISC-V Crypto TG, with stronger involvement from Ken Dockser and a few additional folks.
+> Karu doesn't support many *Scalar Cryptography Extensions* (`Zk..` rather than `Zvk..`) as these were mostly superseded by the vector equivalents in [RVA23U64](https://docs.riscv.org/reference/rva23/v1.0/rva23-profiles.html).
+> Back in 2020, I helped write a [paper](https://doi.org/10.46586/tches.v2021.i1.109-136) on the design process for these non-vector symmetric cryptography extensions. Already then, it was clear that Vector Cryptography would be more relevant to application-class processors. The development of vector extensions was a continuation of scalar work in the RISC-V Crypto TG in 2020-23 (with stronger involvement from Ken Dockser and a few additional folks), but I don't think that a separate academic write-up exists for it. However, the current Karu has a serious gap: it lacks the `Zkr` *Entropy Source Extension* for true random bits. The entropy source extension is shared between vector and scalar cryptography, and its design rationale is documented in this [paper](https://doi.org/10.1007/s13389-021-00275-6) ([free e-Print](https://eprint.iacr.org/2020/866.pdf)) that appeared in different versions from 2020 to 2022.
 
-##	You can set it dynamically -- on command line!
+##	You can set capabilities dynamically -- on command line!
 
 The OpenSSL command-line utility (of the same name) can pick up the capability string from an environment variable, so we can pass it on the command line and study the effect of various extensions on performance.
 
@@ -86,7 +86,7 @@ So, plain AES operations are 6564.63 / 199.26 = 33 times faster with the extensi
 
 ##	Initial OpenSSL Benchmarks
 
-The KaruDeb repo includes an automated script `openssl_zvk_bench` that runs this test on relevant ciphers. 
+The KaruDeb repo includes an automated script `openssl_zvk_bench` that runs this test on relevant ciphers. Here are some summary numbers from my first run. These are wall-clock timings measured by the standard `openssl` `speed` command on the 75 MHz FPGA board running Linux 7.1.1 (with full MMU and DDR4 memory overhead):
 
 | Case | Algorithm | scalar kB/s | Best cap set | Best kB/s | Best speedup |
 |---|---|---:|---|---:|---:|
@@ -101,7 +101,7 @@ The KaruDeb repo includes an automated script `openssl_zvk_bench` that runs this
 | sm4-ecb | SM4-ECB | 222.6 | `zvkb_zvksed` | 1784.8 | 8.02x |
 | chacha20 | ChaCha20 | 403.4 | `v_zbb_zvkb` | 1363.7 | 3.38x |
 
-Even though we write "Best cap set", there is no harm in having all of the capabilities enabled.
+Even though we write "Best cap set", there is no harm in having all of the capabilities enabled simultaneously.
 
 >[!tip]
-> We also use the `openssl` command-line utility for additional end-to-end known-answer tests (KATs); this script is `openssl_zvk_kat`.
+> We also use the `openssl` command-line utility for additional end-to-end known-answer tests (KATs) for its symmetric crypto implementations; this script is `openssl_zvk_kat`.
