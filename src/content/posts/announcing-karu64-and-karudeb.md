@@ -14,7 +14,7 @@ description: First public release of the karu64 RV64 core and the karudeb Debian
 
 **`karu64`** is a new RV64 Application core, with a focus on supporting the RVA23U64 application profile as well as the latest Cryptography extensions from RISC-V International. We implemented Karu CPU in portable Verilog, and it is released under a permissive (BSD 3-Clause) license.
 
-The Linux baseline is RV64GCV (RV64IMAFDCV + Zicsr + Zifencei, RVV 1.0 with Zvl256b), with M/S/U privilege, Sv39 translation, generic CLINT/PLIC/NS16550 platform services (interrupts and serial console). We also have full Zvkt (vector cryptography) extensions and Keccak available. 
+The Linux baseline is RV64GCV (RV64IMAFDCV + Zicsr + Zifencei, RVV 1.0 with Zvl256b), with M/S/U privilege, Sv39 translation, generic CLINT/PLIC/NS16550 platform services (interrupts and serial console). We also have full Zvk (vector cryptography) extensions and Keccak available. 
 
 Today, we're opening up two GitHub repos that together take a RISC-V core from RTL all the way to a Debian shell prompt. 
 

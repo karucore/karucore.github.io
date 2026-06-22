@@ -18,7 +18,7 @@ description: Evaluating the impact of the Keccak extension on PQC (ML-KEM and ML
 _Well, I was actually in [Belfast](https://www.qub.ac.uk/research-centres/csit/) doing my final post-doc then, and thanks to Prof. Máire & Co I can now claim "10+ years of PQC experience". Anyway, let me try to explain what RISC-V PQC TG currently plans to do about PQC first.._
 
 >[!NOTE]
->**TLDR;** The Keccak instruction `vkeccak.vi` proposed in PQC TG in RISC-V Internation is implemented in our [karu64](https://github.com/karucore/karu64) core and makes standard Lattice-based PQC algorithms go 50% faster. Even if that is the only change to the implementation (no hand-optimized NTT, etc.), the speedup is around 40%.
+>**TLDR;** The Keccak instruction `vkeccak.vi` proposed in PQC TG in RISC-V International is implemented in our [karu64](https://github.com/karucore/karu64) core and makes standard lattice-based PQC algorithms go 50% faster. Even if that is the only change to the implementation (no hand-optimized NTT, etc.), the speedup is around 40%.
 
 
 ##	PQC Standards vs Keccak
@@ -76,7 +76,7 @@ While the permutation itself is easily 24 cycles, that is not the latency of the
 
 ##	`vkeccak`: Specification Status
 
-The implement variant of the instruction performs Keccak in place -- in register vd. The 5-bit immediate value specifies the number of rounds. This allows both SHA-3 functions and variants such as [KangarooTwelve and TurboSHAKE](https://www.rfc-editor.org/info/rfc9861/) to be implemented.
+The implemented variant of the instruction performs Keccak in place -- in register vd. The 5-bit immediate value specifies the number of rounds. This allows both SHA-3 functions and variants such as [KangarooTwelve and TurboSHAKE](https://www.rfc-editor.org/info/rfc9861/) to be implemented.
 
 ```
 vkeccak.vi vd, imm5
@@ -85,10 +85,10 @@ vkeccak.vi vd, imm5
 The main proposal is that the source/destination register vd specify a LMUL = 2048/VLEN sized register group. In Karu, we have VLEN=256, and hence LMUL=8. The 25-word Keccak state 00 .. 24 can be mapped into 4 possible locations (vector register groups of size LMUL=8).; vd can be { V0, V8, V16, V24 }:
 
 ```
- V0: [00 01 02 03]   V1: [04 05 06 07]   V2: [08 09 10 11]   V0: [12 13 14 15]
+ V0: [00 01 02 03]   V1: [04 05 06 07]   V2: [08 09 10 11]   V3: [12 13 14 15]
  V4: [16 17 18 19]   V5: [20 21 22 23]   V6: [24 -- -- --]   V7: [-- -- -- --]
 
- V8: [00 01 02 03]   V1: [04 05 06 07]   V2: [08 09 10 11]   V0: [12 13 14 15]
+ V8: [00 01 02 03]   V9: [04 05 06 07]  V10: [08 09 10 11]  V11: [12 13 14 15]
 V12: [16 17 18 19]  V13: [20 21 22 23]  V14: [24 -- -- --]  V15: [-- -- -- --]
 
 V16: [00 01 02 03]  V17: [04 05 06 07]  V18: [08 09 10 11]  V19: [12 13 14 15]
@@ -98,7 +98,7 @@ V24: [00 01 02 03]  V25: [04 05 06 07]  V26: [08 09 10 11]  V27: [12 13 14 15]
 V28: [16 17 18 19]  V29: [20 21 22 23]  V30: [24 -- -- --]  V31: [-- -- -- --]
 ```
 
-There is a draft specification: [zvknhk.adoc](https://github.com/mjosaarinen/riscv-isa-manual/blob/main/src/zvknhk.adoc), also rendered as Chapter 31 here: [riscv-spec.pdf](https://raw.githubusercontent.com/mjosaarinen/rv-vkeccak-dev/refs/heads/main/riscv-spec.pdf). Furthermore, a private repo [keccak-xrv](https://github.com/mjosaarinen/keccak-xrv) provides tests for the instruction that can be ran with a [patched version of the Spike](https://github.com/mjosaarinen/riscv-isa-sim/tree/dev-keccak) golden model/simulator.
+There is a draft specification: [zvknhk.adoc](https://github.com/mjosaarinen/riscv-isa-manual/blob/main/src/zvknhk.adoc), also rendered as Chapter 31 here: [riscv-spec.pdf](https://raw.githubusercontent.com/mjosaarinen/rv-vkeccak-dev/refs/heads/main/riscv-spec.pdf). Furthermore, a private repo [keccak-xrv](https://github.com/mjosaarinen/keccak-xrv) provides tests for the instruction that can be run with a [patched version of the Spike](https://github.com/mjosaarinen/riscv-isa-sim/tree/dev-keccak) golden model/simulator.
 
 
 ### Open and Semi-Open Issues
@@ -107,7 +107,7 @@ There are some open issues regarding how the 1600-bit state is mapped to the vec
 
 * For VLEN=256 and higher, the situation is relatively straightforward; ceil(1600/VLEN) registers are required; 7 registers for VLEN=256 and 4 registers with VLEN=512, etc. These fit into normal register group sizes. However, VLEN=128 is problematic: 13 registers are required, exceeding the maximum register group size, LMUL=8. This could be resolved simply by considering the group size being _implicit_ for the Keccak instruction. From an implementation viewpoint, the FSM (or similar) for accessing the VRF is likely unique to it in any case.
 
-* A further question is whether any 5-bit number of rounds 1..32 should be admissible. Allowing any intermediate can make a highly optimized implementation that computes double-rounds or even triple-rounds (per cycle) potentially more difficult to implement. In practice, the Keccak permutation is used only with 12 or 24 rounds, which could be expressed with a single bit (for _"Keccak"_ and _"TurboKeccak"_) and leaving an additional 4 bits reserved for other use.
+* A further question is whether any 5-bit number of rounds should be admissible. Allowing any intermediate can make a highly optimized implementation that computes double-rounds or even triple-rounds (per cycle) potentially more difficult to implement. In practice, the Keccak permutation is used only with 12 or 24 rounds, which could be expressed with a single bit (for _"Keccak"_ and _"TurboKeccak"_) and leaving an additional 4 bits reserved for other use.
 
 * There is also the question of whether vector register V0 should be avoided for some VLEN sizes, as it also serves as the mask register.
 
@@ -118,14 +118,14 @@ Our [ML-KEM and ML-DSA implementations](https://github.com/karucore/karudeb/tree
 
 *	There is a central macro flag for the Keccak permutation that is implemented alternatively with the Keccak instruction (`VK_KECCAK == 1`) or with a reasonably fast scalar code (`VK_KECCAK == 0`).
 
-*	The RISC-V Autovectorizer in recent versions of LLVM really for some targets, but unfortunately it doesn't know that our vector unit is relatively slow compared to the scalar ALU. The C code was compiled with the clang cross-compiler version 23.0.0git, which I built on June 1, 2026 (commit c07f4eef0945cf8e3b1d7480cbfcfa19f79d885f). There was no special target tuning; simply `-O3` flag is used, and architecture flags specify which extensions are allowed. 
+*	The RISC-V Autovectorizer in recent versions of LLVM works really for some targets, but unfortunately it doesn't know that our vector unit is relatively slow compared to the scalar ALU. The C code was compiled with the clang cross-compiler version 23.0.0git, which I built on June 1, 2026 (commit c07f4eef0945cf8e3b1d7480cbfcfa19f79d885f). There was no special target tuning; simply `-O3` flag is used, and architecture flags specify which extensions are allowed. 
 
 *	Certain parts have hand-written vector intrinsics optimizations controlled by flags `MLDSA_RVV == 1` and `MLKEM_RVV == 1`. This is especially relevant for the shuffles in the Number Theoretic Transforms (`vrgather` shuffle instruction) and for rejection sampling in the A matrix generation (`vcompress`). The code is currently limited to our VLEN = 256 size, and may not be the final word in ML-KEM and ML-DSA optimization, but it still beats LLVM & GCC autovectorization in most cases.
 
 *	The code is _parametrized_; different parameter/security levels share the same execution paths, eliminating the need to re-instantiate multiple full versions of the algorithms. This may make the implementations slightly slower -- it was originally done for code size reasons and to simplify the build flow.
 
 >[!WARNING]
->Even though these implementations pass the basic [NIST ACVP KAT](https://github.com/usnistgov/ACVP-Server/tree/master/gen-val/json-files) and hence are functionally correct _99.9...% of the time_, their implementation assurance level is nowhere near projects such as [PQ Code Package](https://github.com/pq-code-package). So, at present, they are intended only for performance testing.
+>Even though these implementations pass the basic [NIST ACVP KAT](https://github.com/usnistgov/ACVP-Server/tree/master/gen-val/json-files) and hence are functionally correct _99.9% of the time_, their implementation assurance level is nowhere near projects such as [PQ Code Package](https://github.com/pq-code-package). So, at present, they are intended only for performance testing.
 
 
 ## Results

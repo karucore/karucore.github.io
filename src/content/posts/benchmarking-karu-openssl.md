@@ -14,11 +14,11 @@ description: Benchmarking stock OpenSSL on Karu with its Zvk cryptography extens
 
 [OpenSSL](https://openssl.org/) is the de facto standard cryptographic library for Linux systems. Hence, it is natural to use it for benchmarking the impact of our basic cryptographic features.
 
-I was happy to notice that the stock OpenSSL 3.5.6 currently shipped with RISC-V Debian (trixie) already has comprehensive support for the Zvk vector crypto extensions. Well, this shouldn't be so surprising -- they were already ratified already in 2023. For more information about these extensions, see  [Chapter 33 of the Unprivileged ISA spec](https://docs.riscv.org/reference/isa/v20260120/unpriv/vector-crypto.html).
+I was happy to notice that the stock OpenSSL 3.5.6 currently shipped with RISC-V Debian (trixie) already has comprehensive support for the Zvk vector crypto extensions. Well, this shouldn't be so surprising -- they were already ratified in 2023. For more information about these extensions, see  [Chapter 33 of the Unprivileged ISA spec](https://docs.riscv.org/reference/isa/v20260120/unpriv/vector-crypto.html).
 
-##	The OpenSSL ``Processor Capabilities Vector''
+##	The OpenSSL "Processor Capabilities Vector"
 
-OpenSSL uses the [RISC-V processor capabilities vector](https://docs.openssl.org/3.6/man3/OPENSSL_riscvcap/) to specify processor capabilities available on a given system. The library can **dynamically** load implementations optimized for your specific processor variant. Not just RISC-V processors but also ARM, Intel, PowerPC, ... CPUs have similar capability vectors, as additional cryptographic capabilities have been added to those ISAs over time.
+OpenSSL uses the [RISC-V processor capabilities vector](https://docs.openssl.org/3.6/man3/OPENSSL_riscvcap/) to specify processor capabilities available on a given system. The library can **dynamically**xload implementations optimized for your specific processor variant. Not just RISC-V processors but also ARM, x86, PowerPC, ... CPUs have similar capability vectors, as additional cryptographic capabilities have been added to those ISAs over time.
 
 On any given machine, you can dump the string from the command line with `openssl info -cpusettings`. With the current Karu64, you get:
 ```
@@ -50,18 +50,18 @@ Linux *does* also know about `Zvkt` (Vector DIEL) -- as can be seen from `/proc/
 > [!note]
 > Karu lacks support for most *[Scalar (non-vector) Cryptography](https://docs.riscv.org/reference/isa/v20260120/unpriv/scalar-crypto.html)* extensions (`Zk..` rather than `Zvk..`) as those were mostly superseded by the vector equivalents in [RVA23U64](https://docs.riscv.org/reference/rva23/v1.0/rva23-profiles.html).
 > Already back in 2020, when I helped to write a [paper](https://doi.org/10.46586/tches.v2021.i1.109-136) explaining the design rationale for scalar symmetric cryptography extensions, it was clear that Vector Cryptography would be used in application-class processors; Zk is essentially intended for low-end microcontrollers only.
-> However, current Karu has a one serious `Zk` gap: It lacks the `Zkr` *[Entropy Source](https://docs.riscv.org/reference/isa/v20260120/unpriv/scalar-crypto.html#crypto_scalar_es)* extension for true random bits. The entropy source extension is actually used for both vector and scalar cryptography. Its design rationale is documented in this [paper](https://doi.org/10.1007/s13389-021-00275-6) ([free e-Print](https://eprint.iacr.org/2020/866.pdf)) that appeared in different versions from 2020 to 2022. 
+> However, current Karu has one serious `Zk` gap: It lacks the `Zkr` *[Entropy Source](https://docs.riscv.org/reference/isa/v20260120/unpriv/scalar-crypto.html#crypto_scalar_es)* extension for true random bits. The entropy source extension is actually used for both vector and scalar cryptography. Its design rationale is documented in this [paper](https://doi.org/10.1007/s13389-021-00275-6) ([free e-Print](https://eprint.iacr.org/2020/866.pdf)) that appeared in different versions from 2020 to 2022. 
 
 ##	You can set capabilities dynamically -- on command line!
 
 The OpenSSL command-line utility (of the same name) can pick up the capability string from an environment variable, so we can pass it on the command line and study the effect of various extensions on performance.
 
-Let's pass simply the base `rv64gc` (base) ISA string to the built-in benchmark function for AES-128:
+Let's pass simply the `rv64gc` (base) ISA string to the built-in benchmark function for AES-128:
 ```
 karu@karudeb:~$ OPENSSL_riscvcap=rv64gc openssl speed -bytes 16384 -evp aes-128-ecb
 ```
 
-The result is decidedly unimpressive, even for a processor running at 75 MHz, quite possibly because constant-time implementation of AES requires a lot of overhead when AES extensions are not available:
+The result is decidedly unimpressive, even for a processor running at 75 MHz, quite possibly because a constant-time implementation of AES requires a lot of overhead when AES extensions are not available:
 ```
 Doing AES-128-ECB ops for 3s on 16384 size blocks: 36 AES-128-ECB ops in 2.96s
 version: 3.5.6
