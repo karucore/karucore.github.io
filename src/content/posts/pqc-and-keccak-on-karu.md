@@ -3,7 +3,7 @@ author: Markku-Juhani O. Saarinen
 pubDatetime: 2026-06-23T00:00:00.000Z
 title: PQC and Keccak on Karu
 featured: true
-draft: false
+draft: true
 tags:
   - riscv
   - pqc
