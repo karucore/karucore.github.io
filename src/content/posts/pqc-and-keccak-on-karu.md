@@ -132,7 +132,7 @@ Our [ML-KEM and ML-DSA implementations](https://github.com/karucore/karudeb/tree
 
 ## Results
 
-Here we are giving some raw cycle numbers; you can see that Karu is not as fast as most other processors (its CPI -- the average cycles/instruction number when running general benchmarks such as CoreMark is higher than on many microcontrollers). That wasn't our goal with this single-issue in-order CPU that doesn't even have proper caches; we wanted to achieve feature completeness while still fitting a full application vector processor in an FPGA. In absolute terms, these numbers tell nothing about "RISC-V" -- if I built a processor like this with x86 or ARM ISA, it would have an equally bad CPI.
+Here we are giving some raw cycle numbers; you can see that Karu is not as fast as most other processors (its CPI -- the average cycles/instruction number when running general benchmarks such as CoreMark -- is pretty high). That wasn't our goal with this single-issue in-order CPU that doesn't even have proper caches; we wanted to achieve feature completeness while still fitting a full application vector processor in an FPGA. In absolute terms, these numbers tell nothing about "RISC-V" -- if I built a processor like this with x86 or ARM ISA, it would have an equally bad CPI.
 
 Hence, "speed" is computed as before-cycles / after-cycles _on the same target_, so 1.00x means the same speed, and values above 1.00x mean the second build is faster. Averages are arithmetic means over the nine top-level operations for each algorithm.
 
