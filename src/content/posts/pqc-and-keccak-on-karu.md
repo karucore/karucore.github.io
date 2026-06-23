@@ -29,7 +29,7 @@ It turns out that cryptographic hash functions (the actual subject matter of my 
 * [FIPS 204](https://doi.org/10.6028/NIST.FIPS.204) 
 _"Module-Lattice-Based Digital Signature Standard"_ (ML-DSA) is the recommended PQC authentication and integrity protection method.
 
-Doing quantitative analysis (hey, we're RISC!) of ML-KEM and ML-DSA reveals that often more than 50% of their execution time is actually spent computing the KECCAK-p[1600, 24] permutation, the core of the SHAKE extensible-output function (XOF). SHAKE is specified as a part of the SHA-3 standard [FIPS 202](http://dx.doi.org/10.6028/NIST.FIPS.202).
+Basic quantitative analysis of ML-KEM and ML-DSA reveals that often more than 50% of their execution time is actually spent computing the KECCAK-p[1600, 24] permutation, the core of the SHAKE extensible-output function (XOF). SHAKE is specified as a part of the SHA-3 standard [FIPS 202](http://dx.doi.org/10.6028/NIST.FIPS.202).
 
 Intuitively, you wouldn't necessarily expect this -- symmetric cryptography "support" functions consume a negligible percentage of cycles in traditional asymmetric RSA and Elliptic Curve cryptography. For the most part, ML-KEM and ML-DSA are _not_ using SHAKE to hash (_"absorb"_) input data, but to expand (_"squeeze"_) random bits for various purposes.
 
