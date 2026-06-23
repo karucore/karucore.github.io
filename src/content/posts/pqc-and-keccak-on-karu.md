@@ -10,7 +10,7 @@ tags:
   - keccak
   - ml-kem
   - ml-dsa
-description: Evaluating the impact of the proposed Keccak extension on PQC (ML-KEM and ML-DSA) performance on Karu: We describe why exactly PQC gets 50% faster with it.
+description: Evaluating the impact of the proposed Keccak extension on Post-Quantum Cryptography (ML-KEM and ML-DSA) performance on Karu.  We describe why PQC gets 50% faster with Keccak.
 ---
 
 **Here at [Manse Processors](https://mjos.fi/), we have been working on Post-Quantum  Cryptography since 2015!**
