@@ -3,7 +3,7 @@ author: Markku-Juhani O. Saarinen
 pubDatetime: 2026-06-23T00:00:00.000Z
 title: PQC and Keccak on Karu
 featured: true
-draft: true
+draft: false
 tags:
   - riscv
   - pqc
@@ -18,7 +18,7 @@ description: Evaluating the impact of the Keccak extension on PQC (ML-KEM and ML
 _Well, I was actually in [Belfast](https://www.qub.ac.uk/research-centres/csit/) doing my final post-doc then, and thanks to Prof. Máire & Co I can now claim "10+ years of PQC experience". Anyway, let me try to explain what RISC-V PQC TG currently plans to do about PQC first.._
 
 >[!NOTE]
->**TLDR;** The Keccak instruction `vkeccak.vi` proposed in PQC TG in RISC-V International is implemented in our [karu64](https://github.com/karucore/karu64) core and makes standard lattice-based PQC algorithms go 50% faster. Even if that is the only change to the implementation (no hand-optimized NTT, etc.), the speedup is around 40%.
+>**TLDR;** The Keccak instruction `vkeccak.vi` proposed in PQC TG in RISC-V International is implemented in our [karu64](https://github.com/karucore/karu64) core and makes standard lattice-based PQC algorithms go 50% faster. The more you optimize the rest, the bigger the Keccak share becomes and the greater the relative benefit of Keccak.
 
 
 ##	PQC Standards vs Keccak
@@ -112,7 +112,7 @@ There are some open issues regarding how the 1600-bit state is mapped to the vec
 * There is also the question of whether vector register V0 should be avoided for some VLEN sizes, as it also serves as the mask register.
 
 
-## Benchmarked PQC Code
+## Benchmarking PQC Code
 
 Our [ML-KEM and ML-DSA implementations](https://github.com/karucore/karudeb/tree/main/tools/pqc) in KaruDeb have been derived from the original "ANSI C" Kyber and Dilithium code, with some modifications and options.
 
@@ -122,7 +122,9 @@ Our [ML-KEM and ML-DSA implementations](https://github.com/karucore/karudeb/tree
 
 *	Certain parts have hand-written vector intrinsics optimizations controlled by flags `MLDSA_RVV == 1` and `MLKEM_RVV == 1`. This is especially relevant for the shuffles in the Number Theoretic Transforms (`vrgather` shuffle instruction) and for rejection sampling in the A matrix generation (`vcompress`). The code is currently limited to our VLEN = 256 size, and may not be the final word in ML-KEM and ML-DSA optimization, but it still beats LLVM & GCC autovectorization in most cases.
 
-*	The code is _parametrized_; different parameter/security levels share the same execution paths, eliminating the need to re-instantiate multiple full versions of the algorithms. This may make the implementations slightly slower -- it was originally done for code size reasons and to simplify the build flow.
+*	In these implementations, different parameter sets share the same execution paths, eliminating the need to re-instantiate multiple full versions of the algorithms for different security levels. This may make implementations slightly slower due to compiler optimizations (fewer opportunities to embed constants in instruction immediates, etc.), but it was originally done for code size and to simplify the build flow.
+
+*	The cycle counts are read with the standard RISC-V `rdcycles` instruction. Especially in a multi-user or multi-core Linux system, this register may be filtered/managed. The KaruDeb has a little utility for that: [perf_run.c](https://github.com/karucore/karudeb/blob/main/tools/perf_run.c) opens Linux perf events and then execs the actual benchmark binary (and its parameters) from the command line.
 
 >[!WARNING]
 >Even though these implementations pass the basic [NIST ACVP KAT](https://github.com/usnistgov/ACVP-Server/tree/master/gen-val/json-files) and hence are functionally correct _99.9% of the time_, their implementation assurance level is nowhere near projects such as [PQ Code Package](https://github.com/pq-code-package). So, at present, they are intended only for performance testing.
@@ -130,12 +132,16 @@ Our [ML-KEM and ML-DSA implementations](https://github.com/karucore/karudeb/tree
 
 ## Results
 
+Here we are giving some raw cycle numbers; you can see that Karu is not as fast as most other processors (its CPI -- the average cycles/instruction number when running general benchmarks such as CoreMark is higher than on many microcontrollers). That wasn't our goal with this single-issue in-order CPU that doesn't even have proper caches; we wanted to achieve feature completeness while still fitting a full application vector processor in an FPGA. In absolute terms, these numbers tell nothing about "RISC-V" -- if I built a processor like this with x86 or ARM ISA, it would have an equally bad CPI.
 
-Speed is computed as before-cycles / after-cycles, so 1.00x means the same speed, and values above 1.00x mean the second build is faster. Averages are arithmetic means over the nine top-level operations for each algorithm.
+Hence, "speed" is computed as before-cycles / after-cycles _on the same target_, so 1.00x means the same speed, and values above 1.00x mean the second build is faster. Averages are arithmetic means over the nine top-level operations for each algorithm.
+
+If you are interested in instruction counts rather than cycle counts (which _are_ purely ISA dependent), you can obtain those offline using the spike simulator and the test matrix scripts for [ML-KEM](https://github.com/karucore/karudeb/blob/main/tools/pqc/mlkem/test_matrix.sh) and [ML-DSA](https://github.com/karucore/karudeb/blob/main/tools/pqc/mldsa/test_matrix.sh).
+
 
 ###	Impact of Scalar Bitmanip Alone (+15%)
 
-_(This is almost entirely thanks to RORI and ANDN making Keccak faster.)_
+_(Simply enabling the Zbb flag in the compiler. This is almost entirely thanks to RORI and ANDN making Keccak faster.)_
 
 **ML-KEM**: RV64GC vs RV64GC+Zbb
 
@@ -170,7 +176,7 @@ _(This is almost entirely thanks to RORI and ANDN making Keccak faster.)_
 
 ### Impact of Keccak without Intrinsics (+40%)
 
-_(No modification to source code except addition of Keccak instruction.)_
+_(Autovectorization in use, no intrinsics. No modification to source code except addition of Keccak instruction.)_
 
 **ML-KEM**: RV64GCV+Zbb vs RV64GCV+Keccak
 
@@ -205,7 +211,7 @@ _(No modification to source code except addition of Keccak instruction.)_
 
 ###	Impact of Intrinsics alone (+25%)
 
-_(Optmization with vector intrinsics had a positive but not radical impact.)_
+_(No Keccak instruction. Impact of my optimizations with vector intrinsics over autovectorization.)_
 
 **ML-KEM**: RV64GCV+Zbb vs RV64GCV+Zbb+Intrin
 
@@ -240,7 +246,7 @@ _(Optmization with vector intrinsics had a positive but not radical impact.)_
 
 ### With Vector Intrinsics: Impact of Keccak (+52%)
 
-_(With vector intrinsics the relative share of Keccak cycles increases, so the impact of the Keccak instruction is larger.)_
+_(This is the headline number. With vector intrinsics the relative share of Keccak cycles increases, so the impact of the Keccak instruction is larger.)_
 
 **ML-KEM**: RV64GCV+Zbb+Intrin vs RV64GCV+Intrin+Keccak
 
