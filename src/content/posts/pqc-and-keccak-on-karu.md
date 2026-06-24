@@ -107,7 +107,7 @@ There are some open issues regarding how the 1600-bit state is mapped to the vec
 
 * For VLEN=256 and higher, the situation is relatively straightforward; ceil(1600/VLEN) registers are required; 7 registers for VLEN=256 and 4 registers with VLEN=512, etc. These fit into normal register group sizes. However, VLEN=128 is problematic: 13 registers are required, exceeding the maximum register group size, LMUL=8. This could be resolved simply by considering the group size being _implicit_ for the Keccak instruction. From an implementation viewpoint, the FSM (or similar) for accessing the VRF is likely unique to it in any case.
 
-* A further question is whether any 5-bit number of rounds should be admissible. Allowing any intermediate can make a highly optimized implementation that computes double-rounds or even triple-rounds (per cycle) potentially more difficult to implement. In practice, the Keccak permutation is used only with 12 or 24 rounds, which could be expressed with a single bit (for _"Keccak"_ and _"TurboKeccak"_) and leaving an additional 4 bits reserved for other use.
+* A further open question is whether any 5-bit number of rounds should be admissible. Allowing any intermediate can complicate highly optimized hardware realizations that computes double-rounds or even triple-rounds per cycle. In practice, the Keccak permutation is used only with 12 or 24 rounds, which could be expressed with a single bit (for _"Keccak"_ and _"TurboKeccak"_), leaving an additional 4 bits reserved for other use.
 
 * There is also the question of whether vector register V0 should be avoided for some VLEN sizes, as it also serves as the mask register.
 
