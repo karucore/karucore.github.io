@@ -18,7 +18,7 @@ description: Evaluating the impact of the proposed Keccak extension on Post-Quan
 _Well, I was actually in [Belfast](https://www.qub.ac.uk/research-centres/csit/) doing my final post-doc then, and thanks to Prof. Máire & Co I can now claim "10+ years of PQC experience". Anyway, let me try to explain what RISC-V PQC TG currently plans to do about PQC first.._
 
 >[!NOTE]
->**TLDR;** The Keccak instruction `vkeccak.vi` proposed in PQC TG in RISC-V International is implemented in our [karu64](https://github.com/karucore/karu64) core and makes standard lattice-based PQC algorithms go 50% faster. The more you optimize the rest, the bigger the Keccak share becomes and the greater the relative benefit of Keccak.
+>**TL;DR:** The Keccak instruction `vkeccak.vi` proposed in PQC TG in RISC-V International is implemented in our [karu64](https://github.com/karucore/karu64) core and makes standard lattice-based PQC algorithms go 50% faster. The more you optimize the rest, the bigger the Keccak share becomes and the greater the relative benefit of Keccak.
 
 
 ##	PQC Standards vs Keccak
