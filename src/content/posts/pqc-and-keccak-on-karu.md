@@ -1,6 +1,7 @@
 ---
 author: Markku-Juhani O. Saarinen
 pubDatetime: 2026-06-23T00:00:00.000Z
+modDatetime: 2026-09-11T10:48:23.000Z
 title: PQC and Keccak on Karu
 featured: true
 draft: false
@@ -8,17 +9,21 @@ tags:
   - riscv
   - pqc
   - keccak
+  - zvknhk
   - ml-kem
   - ml-dsa
-description: Evaluating the impact of the proposed Keccak extension on Post-Quantum Cryptography (ML-KEM and ML-DSA) performance on Karu.  We describe why PQC gets 50% faster with Keccak.
+description: "Why PQC gets 50% faster with Vector Keccak on Karu, updated for the official RISC-V Zvknhk draft and its new vkeccak.vi encoding."
 ---
 
 **Here at [Manse Processors](https://mjos.fi/), we have been working on Post-Quantum  Cryptography since 2015!**
 
-_Well, I was actually in [Belfast](https://www.qub.ac.uk/research-centres/csit/) doing my final post-doc then, and thanks to Prof. Máire & Co I can now claim "10+ years of PQC experience". Anyway, let me try to explain what RISC-V PQC TG currently plans to do about PQC first.._
+_Well, I was actually in [Belfast](https://www.qub.ac.uk/research-centres/csit/) doing my final post-doc then, and thanks to Prof. Máire & Co I can now claim "10+ years of PQC experience". Anyway, let me first explain why the RISC-V PQC Task Group is working on Keccak support._
 
 >[!NOTE]
->**TL;DR:** The Keccak instruction `vkeccak.vi` proposed in PQC TG in RISC-V International is implemented in our [karu64](https://github.com/karucore/karu64) core and makes standard lattice-based PQC algorithms go 50% faster. The more you optimize the rest, the bigger the Keccak share becomes and the greater the relative benefit of Keccak.
+>**Updated September 11, 2026:** Published [RISC-V PQC specification releases](https://github.com/riscv/riscv-pqc/releases) and the Spike, QEMU, OpenSSL, and test support now have an official home in the [RISC-V PQC repository](https://github.com/riscv/riscv-pqc). Karu64 and KaruDeb have been updated for the new `vkeccak.vi` encoding and fixed-group semantics.
+
+>[!NOTE]
+>**TL;DR:** The Keccak instruction `vkeccak.vi` defined by the draft Zvknhk extension is implemented in our [karu64](https://github.com/karucore/karu64) core and makes standard lattice-based PQC algorithms go 50% faster. The more you optimize the rest, the bigger the Keccak share becomes and the greater the relative benefit of Keccak.
 
 
 ##	PQC Standards vs Keccak
@@ -68,21 +73,33 @@ The structure is very fast in pure hardware, allowing 1 or 2 rounds per cycle ev
 
 While fast, the permutation is not very small; the [cycle-per-round implementation](https://github.com/karucore/karu64/blob/main/rtl/zvk/keccak_round.v) in Karu is roughly 30 kGE, the size of a very small microcontroller core. However, for application processors, the exceptional, typically 100-fold, difference in hardware and software speed makes it sensible to do the entire permutation with a single instruction.
 
-Hence, the main proposal from the [RISC-V Post-Quantum Cryptography Task Group](https://riscv.atlassian.net/wiki/spaces/PQC/overview) is a single instruction, _Vector-Immediate Multi-Round Keccak_, with preliminary mnemonic `vkeccak.vi`. 
+Hence, the draft [`Zvknhk` Vector Keccak extension](https://github.com/riscv/riscv-pqc/releases) specifies a single instruction, _Vector-Immediate Multi-Round Keccak_, with the mnemonic `vkeccak.vi`.
 
 
 While the permutation itself is easily 24 cycles, that is not the latency of the permutation due to the way vector register files are organized. A typical implementation will spend several times as much time getting data to and from the VRF as on the permutation itself. However, even if the permutation takes 100 cycles, it's still orders of magnitude faster than executing thousands of instructions. 
 
 
-##	`vkeccak`: Specification Status
+## `vkeccak`: Zvknhk Specification and Tooling
 
-The implemented variant of the instruction performs Keccak in place -- in register vd. The 5-bit immediate value specifies the number of rounds. This allows both SHA-3 functions and variants such as [KangarooTwelve and TurboSHAKE](https://www.rfc-editor.org/info/rfc9861/) to be implemented.
+The instruction is now defined by the published [RISC-V PQC specification](https://github.com/riscv/riscv-pqc/releases), with its source maintained in the official [RISC-V PQC repository](https://github.com/riscv/riscv-pqc). That specification is normative. The repository's [Zvknhk support tree](https://github.com/riscv/riscv-pqc/tree/main/zvknhk) also keeps the non-normative implementations and tests together:
+
+* [Spike support](https://github.com/riscv/riscv-pqc/tree/main/zvknhk/spike) provides the instruction semantics for the RISC-V ISA simulator.
+* [QEMU support](https://github.com/riscv/riscv-pqc/tree/main/zvknhk/qemu) implements the same semantics for TCG.
+* [OpenSSL support](https://github.com/riscv/riscv-pqc/tree/main/zvknhk/openssl) connects the instruction to SHA-3, SHAKE, and the Keccak-based PQC algorithms.
+* The [instruction test suite](https://github.com/riscv/riscv-pqc/tree/main/zvknhk/test) covers the 24-round and 12-round forms.
+
+The implemented instruction performs Keccak in place in a fixed 2048-bit element group designated by `vd`. Its encoding can be written as:
 
 ```
-vkeccak.vi vd, imm5
+vkeccak.vi v0, 0
+.insn r 0x77, 0x2, 0x53, x0, x18, x0
 ```
 
-The main proposal is that the source/destination register vd specify a LMUL = 2048/VLEN sized register group. In Karu, we have VLEN=256, and hence LMUL=8. The 25-word Keccak state 00 .. 24 can be mapped into 4 possible locations (vector register groups of size LMUL=8).; vd can be { V0, V8, V16, V24 }:
+The raw `.insn` form uses x-register names to encode the numeric instruction fields: the first `x0` designates `v0`, while the final `x0` encodes `imm5=0`. Use `x1` in the final field for the 12-round form.
+
+The immediate is now a selector rather than a literal round count. `imm5=0` selects the 24-round Keccak-p[1600,24] permutation used by SHA-3 and SHAKE. `imm5=1` selects Keccak-p[1600,12], using round constants RC[12..23], for functions such as [KangarooTwelve and TurboSHAKE](https://www.rfc-editor.org/info/rfc9861/). All other immediate values are reserved.
+
+The fixed group contains 32 64-bit elements and is independent of `vl` and `LMUL`. The 25-word Keccak state occupies elements 0 through 24; elements 25 through 31 are preserved. At Karu's VLEN=256, the group spans eight registers, so `vd` can be `v0`, `v8`, `v16`, or `v24`:
 
 ```
  V0: [00 01 02 03]   V1: [04 05 06 07]   V2: [08 09 10 11]   V3: [12 13 14 15]
@@ -98,23 +115,20 @@ V24: [00 01 02 03]  V25: [04 05 06 07]  V26: [08 09 10 11]  V27: [12 13 14 15]
 V28: [16 17 18 19]  V29: [20 21 22 23]  V30: [24 -- -- --]  V31: [-- -- -- --]
 ```
 
-There is a draft specification: [zvknhk.adoc](https://github.com/mjosaarinen/riscv-isa-manual/blob/main/src/zvknhk.adoc), also rendered as Chapter 31 here: [riscv-spec.pdf](https://raw.githubusercontent.com/mjosaarinen/rv-vkeccak-dev/refs/heads/main/riscv-spec.pdf). Furthermore, a private repo [keccak-xrv](https://github.com/mjosaarinen/keccak-xrv) provides tests for the instruction that can be run with a [patched version of the Spike](https://github.com/mjosaarinen/riscv-isa-sim/tree/dev-keccak) golden model/simulator.
+### Resolved Details in the Current Draft
 
+* `VLEN=128` is supported by an instruction-specific 16-register fixed group. At larger VLENs, the group uses `ceil(2048/VLEN)` aligned registers.
+* `v0` is a valid destination when it satisfies the group-alignment rule. The instruction itself must be unmasked (`vm=1`).
+* `SEW` values other than 64, immediate values other than 0 or 1, misaligned groups, and `vm=0` are reserved encodings. The official Spike and QEMU models reject them as illegal instructions.
+* A nonzero `vstart` explicitly raises an illegal-instruction exception.
+* The operation is independent of `vl`, including `vl=0`, and leaves all bits outside the fixed group unchanged.
 
-### Open and Semi-Open Issues
-
-There are some open issues regarding how the 1600-bit state is mapped to the vector register file across various physical vector register sizes (VLEN).
-
-* For VLEN=256 and higher, the situation is relatively straightforward; ceil(1600/VLEN) registers are required; 7 registers for VLEN=256 and 4 registers with VLEN=512, etc. These fit into normal register group sizes. However, VLEN=128 is problematic: 13 registers are required, exceeding the maximum register group size, LMUL=8. This could be resolved simply by considering the group size being _implicit_ for the Keccak instruction. From an implementation viewpoint, the FSM (or similar) for accessing the VRF is likely unique to it in any case.
-
-* A further open question is whether any 5-bit number of rounds should be admissible. Allowing any intermediate can complicate highly optimized hardware realizations that computes double-rounds or even triple-rounds per cycle. In practice, the Keccak permutation is used only with 12 or 24 rounds, which could be expressed with a single bit (for _"Keccak"_ and _"TurboKeccak"_), leaving an additional 4 bits reserved for other use.
-
-* There is also the question of whether vector register V0 should be avoided for some VLEN sizes, as it also serves as the mask register.
+This is a breaking change from the experimental encoding used for the original June measurements. That version treated the immediate as a literal round count and used a different fixed encoding field. Current Karu64 and KaruDeb sources use the official Zvknhk form; binaries built for the earlier encoding must be rebuilt.
 
 
 ## Benchmarking PQC Code
 
-Our [ML-KEM and ML-DSA implementations](https://github.com/karucore/karudeb/tree/main/tools/pqc) in KaruDeb have been derived from the original "ANSI C" Kyber and Dilithium code, with some modifications and options.
+Our [ML-KEM and ML-DSA implementations](https://github.com/karucore/karudeb/tree/main/tools/pqc) in KaruDeb have been derived from the original "ANSI C" Kyber and Dilithium code, with some modifications and options. They have now been ported to the official Zvknhk encoding; the cycle measurements below retain the original June comparison.
 
 *	There is a central macro flag for the Keccak permutation that is implemented alternatively with the Keccak instruction (`VK_KECCAK == 1`) or with a reasonably fast scalar code (`VK_KECCAK == 0`).
 
@@ -136,7 +150,9 @@ Here we are giving some raw cycle numbers; you can see that Karu is not as fast 
 
 Hence, "speed" is computed as before-cycles / after-cycles _on the same target_, so 1.00x means the same speed, and values above 1.00x mean the second build is faster. Averages are arithmetic means over the nine top-level operations for each algorithm.
 
-If you are interested in instruction counts rather than cycle counts (which _are_ purely ISA dependent), you can obtain those offline using the spike simulator and the test matrix scripts for [ML-KEM](https://github.com/karucore/karudeb/blob/main/tools/pqc/mlkem/test_matrix.sh) and [ML-DSA](https://github.com/karucore/karudeb/blob/main/tools/pqc/mldsa/test_matrix.sh).
+For validating the instruction semantics independently of Karu's cycle counts, use the [official Zvknhk test suite](https://github.com/riscv/riscv-pqc/tree/main/zvknhk/test) with the repository's [Spike support](https://github.com/riscv/riscv-pqc/tree/main/zvknhk/spike). The ML-KEM and ML-DSA figures below are Karu performance measurements rather than ISA conformance results.
+
+For reproducing the instruction-count measurements, KaruDeb retains separate test-matrix scripts for [ML-KEM](https://github.com/karucore/karudeb/blob/main/tools/pqc/mlkem/test_matrix.sh) and [ML-DSA](https://github.com/karucore/karudeb/blob/main/tools/pqc/mldsa/test_matrix.sh).
 
 
 ###	Impact of Scalar Bitmanip Alone (+15%)
@@ -277,5 +293,3 @@ _(This is the headline number. With vector intrinsics the relative share of Kecc
 | ML-DSA-87          | Sign      |    42,379,474 |   32,177,514 |     1.32x |
 | ML-DSA-87          | Verify    |    18,061,301 |   10,303,710 |     1.75x |
 | **ML-DSA average** |           |               |              | **1.59x** |
-
-
