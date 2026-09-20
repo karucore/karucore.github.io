@@ -108,7 +108,7 @@ Karu64 is a single-issue, in-order RV64GCV core written in portable Verilog-2001
 
 ### From Marian to Karu64
 
-Our original intention was to implement the standards-track Keccak extension within an existing open-source core for system evaluation. However, we found that the available open-source candidates were not suitable for full system evaluation. For instance, CVA6/Ara[^PeCaAn24] is lacking full RVV 1.0 compliance and provides no MMU support for vector operations. This, and the desire to run standard RVA23 Linux software on an FPGA, motivated us to develop the Karu64 vector core using only a small number of pre-existing hardware components:
+Our original intention was to implement the standards-track Keccak extension within an existing open-source core for system evaluation. However, we found that the available open-source candidates were not suitable for full system evaluation. For instance, CVA6/Ara[^PeCaAn24] has gaps in RVV 1.0 compliance and provides no MMU support for vector operations. This, and the desire to run standard RVA23 Linux software on an FPGA, motivated us to develop the Karu64 vector core using only a small number of pre-existing hardware components:
 
 Marian[^SzIsSa24] integrated ratified Zvk cryptography into a CVA6/Ara[^PeCaAn24] vector subsystem using operand collection, cryptographic execution, and writeback stages. Karu64 reuses its AES, SHA-2, SM3, and SM4 logic, with several adaptations. A new GHASH engine replaces Marian's combinational implementation. We adopt the Keccak round RTL from the Sloth SLH-DSA accelerator[^Sa24].
 
