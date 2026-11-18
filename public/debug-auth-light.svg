@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="490" viewBox="0 0 780 490" role="img"><title>Karu64 debug authentication: request, challenge with a Zkr nonce, signed response, grant</title><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1f2937"/></marker></defs><rect x="25" y="12" width="190" height="46" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="120" y="32" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" text-anchor="middle" fill="#1f2937" font-weight="bold">Debugger</text>
+<text x="120" y="49" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#6b7280" font-weight="normal">OpenOCD, over JTAG</text>
+<polyline points="120,58 120,440" fill="none" stroke="#6b7280" stroke-width="1" stroke-dasharray="5 4" stroke-linejoin="round"/>
+<rect x="295" y="12" width="190" height="46" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="390" y="32" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" text-anchor="middle" fill="#1f2937" font-weight="bold">Debug Module</text>
+<text x="390" y="49" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#6b7280" font-weight="normal">authdata mailbox, grant</text>
+<polyline points="390,58 390,440" fill="none" stroke="#6b7280" stroke-width="1" stroke-dasharray="5 4" stroke-linejoin="round"/>
+<rect x="565" y="12" width="190" height="46" rx="6" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+<text x="660" y="32" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" text-anchor="middle" fill="#1f2937" font-weight="bold">Hart</text>
+<text x="660" y="49" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#6b7280" font-weight="normal">island ROM at 0x10000</text>
+<polyline points="660,58 660,440" fill="none" stroke="#6b7280" stroke-width="1" stroke-dasharray="5 4" stroke-linejoin="round"/>
+<rect x="545.0" y="72" width="230" height="42" rx="4" fill="#fffbeb" stroke="#b45309" stroke-width="1.5"/>
+<text x="660" y="90" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#b45309" font-weight="normal">power-on, SW12: AUTH + hold</text>
+<text x="660" y="106" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#b45309" font-weight="normal">hart held in reset</text>
+<rect x="290.0" y="72" width="200" height="42" rx="4" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+<text x="390" y="90" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#1f2937" font-weight="normal">locked: dmstatus shows</text>
+<text x="390" y="106" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#1f2937" font-weight="normal">only version, authenticated=0</text>
+<polyline points="120,140 390,140" fill="none" stroke="#1f2937" stroke-width="1.5" marker-end="url(#arr)" stroke-linejoin="round"/>
+<text x="255.0" y="133" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" text-anchor="middle" fill="#1f2937" font-weight="normal">① REQUEST (authdata)</text>
+<polyline points="390,166 660,166" fill="none" stroke="#1f2937" stroke-width="1.5" marker-end="url(#arr)" stroke-linejoin="round"/>
+<text x="525.0" y="159" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" text-anchor="middle" fill="#1f2937" font-weight="normal">release hold; window opens</text>
+<rect x="545.0" y="180" width="230" height="26" rx="4" fill="#fffbeb" stroke="#b45309" stroke-width="1.5"/>
+<text x="660" y="198" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#b45309" font-weight="normal">② 256-bit nonce from seed (Zkr)</text>
+<polyline points="660,230 120,230" fill="none" stroke="#1f2937" stroke-width="1.5" marker-end="url(#arr)" stroke-linejoin="round"/>
+<text x="390.0" y="223" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" text-anchor="middle" fill="#1f2937" font-weight="normal">③ CHALLENGE: device digest, nonce</text>
+<text x="390.0" y="246" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#6b7280" font-weight="normal">20 words through the mailbox</text>
+<rect x="20.0" y="258" width="200" height="26" rx="4" fill="#f3f4f6" stroke="#6b7280" stroke-width="1.5"/>
+<text x="120" y="276" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#1f2937" font-weight="normal">④ sign the challenge</text>
+<polyline points="120,312 660,312" fill="none" stroke="#1f2937" stroke-width="1.5" marker-end="url(#arr)" stroke-linejoin="round"/>
+<text x="390.0" y="305" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" text-anchor="middle" fill="#1f2937" font-weight="normal">⑤ RESPONSE: signature</text>
+<text x="390.0" y="328" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#6b7280" font-weight="normal">TEST algorithm on the FPGA; production verifier open</text>
+<rect x="545.0" y="340" width="230" height="42" rx="4" fill="#fffbeb" stroke="#b45309" stroke-width="1.5"/>
+<text x="660" y="358" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#b45309" font-weight="normal">⑥ verify; set grant, close window</text>
+<text x="660" y="374" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#b45309" font-weight="normal">boot on: fu-boot → OpenSBI → Linux</text>
+<polyline points="390,404 120,404" fill="none" stroke="#2563eb" stroke-width="1.5" marker-end="url(#arr)" stroke-linejoin="round"/>
+<text x="255.0" y="397" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="12" text-anchor="middle" fill="#2563eb" font-weight="normal">⑦ dmstatus.authenticated = 1</text>
+<text x="130" y="428" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" text-anchor="start" fill="#2563eb" font-weight="normal">full Debug 1.0 access</text>
+<text x="390" y="470" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="11" text-anchor="middle" fill="#6b7280" font-weight="normal">one window per power-on: 2^30 cycles (14.3 s at 75 MHz); a reboot does not reopen it</text></svg>
