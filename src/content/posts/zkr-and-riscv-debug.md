@@ -127,7 +127,7 @@ Unrestricted JTAG access is full machine-mode control of the hart. Debug 1.0 pro
 - the lifecycle sits on DIP switches that anyone can flip;
 - the entropy source is not yet characterised.
 
-The production signature algorithm is still to be chosen, from the candidates Ed25519, ML-DSA-44 or a hybrid of both. On the FPGA, four DIP switches (SW12) select what an ASIC would fix in its lifecycle fuses and straps. They are read at the CPU reset button or at reconfiguration:
+The production signature algorithm is still to be chosen; probably SLH-DSA and/or ML-DSA. On the FPGA, four DIP switches (SW12) select what an ASIC would fix in its lifecycle fuses and straps. They are read at the CPU reset button or at reconfiguration:
 
 | SW12 | Off | On |
 | --- | --- | --- |
